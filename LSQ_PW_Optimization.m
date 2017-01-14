@@ -109,7 +109,7 @@ H=observ_grad(X_opt,time,obs_pos,order,EGM,EOP,DAT,Cel_Coord,C_r);
 R=(3/3600)^2*eye(numel(Cel_Coord));
 Covariance(:,:,end)=inv(H'*(inv(R))*H);
 
-sol_struct=struct('sol',X_opt,'AreaMass',C_r,'costfun',Cost_fun,'cov',Covariance);
+sol_struct=struct('sol',X_opt,'Cr',C_r,'costfun',Cost_fun,'cov',Covariance);
 
 end
 

@@ -129,7 +129,7 @@ disp('----------------------------------------------------------------------');
 % Orbit Determination (Powell's dogleg)....................................
 
 kmax=70;                                           % Max Iteration Number
-A_m=1;
+A_m=0.0;
 Sol_struct=LSQ_PW_Optimization(Guess,kmax,obs_pos,Meas,Time_JD,order,EGM,EOP,DAT,A_m);
 
 disp('----------------------------Iteration stop----------------------------');

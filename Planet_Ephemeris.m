@@ -17,13 +17,10 @@ if(size_JD(2)==1 && size_JD(2)~=1)
 end
 timezone=0;
 
-%Initialize values.........................................................
-addpath( 'C:/mice/lib' )            % lib path mice
-addpath( 'C:/mice/src/mice')        % src path mice
 %..........................................................................
 [year,mon,day,hr,min,sec] = invjday (JD);
 [~, ~, ~, ~, ~, ~, ~, ~, ~, ttdb]=convtime(year,mon,day,hr,min,sec,timezone,dut1,dat);
-[state, ~] = cspice_spkezr(PLANET,ttdb*36525.0*86400, 'J2000','LT',REF);
+[state, ~] = cspice_spkezr(PLANET,ttdb*36525*86400, 'J2000','LT+S',REF);
 state=state';
 
 end

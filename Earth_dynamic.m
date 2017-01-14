@@ -31,9 +31,7 @@ timezone=0;
 
 r=X(1:3);
 v=X(4:6);
-plot3(r(1),r(2),r(3),'*b');
-hold on
-drawnow
+
 r_ECEF=gcrs2itrs(r,zeros(3,1),zeros(3,1),ttt,jdut1,lod,xp,yp,dX,dY);
 
 % Sun third body effect....................................................
