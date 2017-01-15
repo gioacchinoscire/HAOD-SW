@@ -1,7 +1,6 @@
 function [R] = tirs2cirs(jdut1)
 
-Tu=jdut1-2451545;
-era=2*pi*(0.7790572732640+1.00273781191135448*Tu);
+era=ERA(jdut1);
 cos_era=cos(-era);
 sin_era=sin(-era);
 

@@ -5,8 +5,8 @@ function [al,em]=EarthAlbedo_Emissivity(lat,JD)
 global w_E
 
 JD0=jday(1981,12,22,0,0,0);
-P1=legendreP(1,sind(lat));
-P2=legendreP(2,sind(lat));
+P1=legendre(1,sind(lat));
+P2=legendre(2,sind(lat));
 a0=0.34;
 a2=0.29;
 c0=0;

@@ -1,4 +1,4 @@
-function [da_SRP] =ERP_effect(r,v,Sun,JD,A_m,Nring,eps_m,ttt,jdut1,lod,xp,yp,ast,dPsi,dEps)
+function [da_SRP] =ERP_effect(r,v,Sun,JD,Nring,A_m,C_r,ttt,jdut1,lod,xp,yp,dX,dY)
 % Earth radiation pressure contribution to satellite accelration
 global R_E c
 
@@ -66,11 +66,11 @@ if(CTheta_sun<0)
     CTheta_sun=0;
 end
 tau=shadow_func(Sun,r);
-r_ecef=eci2ecef(r,zeros(3,1),zeros(3,1),ttt,jdut1,lod,xp,yp,ast,dPsi,dEps); % ECI to ECEF conversion
+r_ecef=gcrs2itrs(r,zeros(3,1),zeros(3,1),ttt,jdut1,lod,xp,yp,dX,dY); 
 lat_elem=asind(r_ecef(3)./norm(r_ecef));        %[deg]
 [al,em]=EarthAlbedo_Emissivity(lat_elem,JD);
-FluxOP=A_*(1+eps_m)*A_m*pSR;          % Optical flux    Km2/s3
-FluxIR=A_*(1+eps_m)*A_m*MBc;          % IR flux         Km2/s3   
+FluxOP=A_*abs(C_r)*A_m*pSR;          % Optical flux    Km2/s3
+FluxIR=A_*abs(C_r)*A_m*MBc;          % IR flux         Km2/s3   
 
 da_cap=(tau*al*FluxOP*CTheta_sun+em*FluxIR)*r/r_norm;
 
@@ -84,7 +84,7 @@ for i=2:Nring+1
        lamd=l*360/Nsi;
        Relem=(R_E/1E3)*(cosd(beta_c(i-1))*R+sind(beta_c(i-1))*(cosd(lamd)*T+sind(lamd)*N));
        tau=shadow_func(Sun,Relem);
-       Relem_ecef=eci2ecef(Relem,zeros(3,1),zeros(3,1),ttt,jdut1,lod,xp,yp,ast,dPsi,dEps); % ECI to ECEF conversion
+       Relem_ecef=gcrs2itrs(Relem,zeros(3,1),zeros(3,1),ttt,jdut1,lod,xp,yp,dX,dY);
        lat_elem=asind(Relem_ecef(3)./norm(Relem_ecef));
        Relm_v=Relem/(R_E/1E3);
        r_j=r-Relem;

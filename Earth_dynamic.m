@@ -64,15 +64,17 @@ g_ECEF=harmonics_model(r_ECEF*1E3,order,EGM,Sun_ECEF*1E3,...
 
 [~,~,g_eci]=itrs2gcrs(zeros(3,1),zeros(3,1),g_ECEF/1E3,ttt,jdut1,lod,xp,yp,dX,dY);
 
-% Solar Radiation Pressure.................................................
+% Solar & Earth Radiation Pressure.........................................
 
+A_m=0.001;
+delta_g_SRP=SRP_effect(r,Sun,(t/86400+JD0),A_m,C_r);
 
-delta_g_SRP=SRP_effect(r,Sun,(t/86400+JD0),C_r);
+Nring=2;
+delta_g_ERP=ERP_effect(r,v,Sun,(t/86400+JD0),Nring,A_m,C_r,ttt,jdut1,lod,xp,yp,dX,dY);
 
 % Earth Radiation Pressure.................................................
 
-% Nring=2;
-%delta_g_ERP=ERP_effect(r,v,Sun,(t/86400+JD0),C_r,Nring,eps_m,ttt,jdut1,lod(ind_p),xp(ind_p),yp(ind_p),ast,dPsi(ind_p),dEps(ind_p));
+
 
 % Relativistic Schwarzschild effect........................................
 
@@ -95,7 +97,7 @@ delta_g_SRP=SRP_effect(r,Sun,(t/86400+JD0),C_r);
 % Total acceleration on satellite..........................................
 
 % tot_g=g_eci+delta_g_sun+delta_g_moon+delta_g_rel_Sc+delta_g_SRP+delta_g_ERP;
-tot_g=g_eci+delta_g_sun+delta_g_moon+delta_g_SRP;
+tot_g=g_eci+delta_g_sun+delta_g_moon+delta_g_SRP+delta_g_ERP;
 
 dxdt=[v;tot_g];
 

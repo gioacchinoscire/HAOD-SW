@@ -51,8 +51,8 @@ s=s-(X*Y/2);
 
 X=X+dX;
 Y=Y+dY;
-
-a=1/2+1/8*(X^2+Y^2);
+d=atan(sqrt((X^2+Y^2)/(1-(X^2+Y^2))));
+a=1/(1+cos(d));
 R_s=[cos(s) sin(s) 0;-sin(s) cos(s) 0;0 0 1];
 Q=[1-a*X^2 -a*X*Y X;-a*X*Y 1-a*Y^2 Y;-X -Y 1-a*(X^2+Y^2)]*R_s;
 
