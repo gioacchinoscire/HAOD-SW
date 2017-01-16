@@ -6,7 +6,9 @@ global w_E
 
 JD0=jday(1981,12,22,0,0,0);
 P1=legendre(1,sind(lat));
+P1=P1(1);
 P2=legendre(2,sind(lat));
+P2=P2(1);
 a0=0.34;
 a2=0.29;
 c0=0;

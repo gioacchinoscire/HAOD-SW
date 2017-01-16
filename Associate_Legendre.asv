@@ -1,0 +1,28 @@
+function [P]=Associate_Legendre(n_max,x)
+P=zeros(n_max+1,n_max+1);
+% P(1,1)=1;       %P_00
+% for i=1:n-1
+%     P(i+1,i+1)=(2*i-1)*sqrt(1-x^2)*P(i,i);
+%     P(i+2,i+1)=(2*i+1)*x*P(i+1,i+1);
+%     for j=1:i
+%         P(i+1,j+1)=(1/(i-j))*((2*i-1)*x*P(i,j+1)-(i+j-1)*P(i-1,j+1));
+%     end
+% end
+
+for m=0:n_max
+    row_m=m+1;
+    if(m~=0)
+        P(row_m,row_m)=(2*m-1)*sqrt(1-x^2)*P(row_m-1,row_m-1);
+    else
+        P(row_m,row_m)=1;
+    end
+    P(row_m+1,row_m)=(2*m+1)*x*P(row_m,row_m);
+    col_m=row_m;
+    
+    for n=m+2:n_max-1
+        row_n=n+1;
+        P(row_n,col_m)=(1/(n-m))*((2*n-1)*x*P(row_n-1,m)-(n+m-1)*P(row_n-2,m));
+    end
+
+end
+end

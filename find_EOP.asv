@@ -6,8 +6,6 @@ curr_EOP=zeros(1,7);
 Day_MJD=jday(year,month,day,0,0,0)-2400000.5;
 Sec_MJD=JD-2400000.5;
 
-% IERS Earth Orientation Parameters (IAU2000/2006A)........................
-
 while(Day_MJD~=eopMJD)
     sel_row=EOP{i};
     eopMJD=str2double(sel_row(13:19));
@@ -77,10 +75,8 @@ dat=curr_EOP(7);
 
 [DeltaUT1,DeltaLOD,DeltaOmega]=Tidal_Effect_On_Earth_Rotation(ttt);
 
-% Diurnal and SemiDiurnal variations due to ocean tides....................
-
+% Diurnal and S..........................
 [Deltaxp_subD,Deltayp_subD,DeltaUT1_subD,DeltaLOD_subD]=SubDiurnal_Earth_Rotation_Variation(ttt,jdut1);
-
 curr_EOP(1)=curr_EOP(1)+Deltaxp_subD;
 curr_EOP(2)=curr_EOP(2)+Deltayp_subD;
 curr_EOP(3)=curr_EOP(3)+DeltaUT1+DeltaUT1_subD;
