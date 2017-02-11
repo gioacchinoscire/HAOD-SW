@@ -1,4 +1,4 @@
-function [J]=Ad_Jacobian(X0_ad,obs_pos,Cel_Coord,time,order,EGM,EOP,DAT,C_r)
+function [J]=Ad_Jacobian(X0_ad,obs_pos,Cel_Coord,time,order,EGM,EOP,DAT,C_rA_m)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This function calculate the Jacobian of the residual vector with the
 % central differences method.
@@ -21,7 +21,7 @@ epsJ=1E-8;
 
 v=zeros(6,1);
 
-J=zeros(length(Cel_Coord(:,1)),7);
+J=zeros(length(Cel_Coord(:,1)),6);
 
 % f0=Residual_vec(X0_ad.*adim,time,obs_pos,order,Coeff,Cel_Coord,C_r);
 
@@ -31,11 +31,11 @@ for i=1:6
     
     Xperturb_pos=X0_ad+epsJ*v;
 
-    fpos=Residual_vec(Xperturb_pos.*adim,time,obs_pos,order,EGM,EOP,DAT,Cel_Coord,C_r);
+    fpos=Residual_vec(Xperturb_pos.*adim,time,obs_pos,order,EGM,EOP,DAT,Cel_Coord,C_rA_m);
     
     Xperturb_neg=X0_ad-epsJ*v;
     
-    fneg=Residual_vec(Xperturb_neg.*adim,time,obs_pos,order,EGM,EOP,DAT,Cel_Coord,C_r);
+    fneg=Residual_vec(Xperturb_neg.*adim,time,obs_pos,order,EGM,EOP,DAT,Cel_Coord,C_rA_m);
     
 %     J(:,i)=(Residual_vec(Xperturb_pos.*adim,time,obs_pos,order,...
 %         Coeff,Cel_Coord,C_r)-f0)/(epsJ);
@@ -45,12 +45,13 @@ for i=1:6
     
 end
 
-C_r_pos=C_r+epsJ;
-fpos=Residual_vec(X0_ad.*adim,time,obs_pos,order,EGM,EOP,DAT,Cel_Coord,C_r_pos);
-C_r_neg=C_r-epsJ;
-fneg=Residual_vec(X0_ad.*adim,time,obs_pos,order,EGM,EOP,DAT,Cel_Coord,C_r_neg);
-
-J(:,7)=(fpos-fneg)/(2*epsJ);
+% C_r_pos=C_rA_m_ad+epsJ;
+% fpos=Residual_vec(X0_ad.*adim,time,obs_pos,order,EGM,EOP,DAT,Cel_Coord,C_r_pos*adim_C_rA_m);
+% 
+% C_r_neg=C_rA_m_ad-epsJ;
+% fneg=Residual_vec(X0_ad.*adim,time,obs_pos,order,EGM,EOP,DAT,Cel_Coord,C_r_neg*adim_C_rA_m);
+% 
+% J(:,7)=(fpos-fneg)/(2*epsJ);
 % J(:,7)=(Residual_vec(X0_ad.*adim,time,obs_pos,order,...
 %         Coeff,Cel_Coord,C_r+epsJ)-f0)/(epsJ);
 

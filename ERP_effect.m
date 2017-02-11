@@ -1,4 +1,4 @@
-function [da_SRP] =ERP_effect(r,v,Sun,JD,Nring,A_m,C_r,ttt,jdut1,lod,xp,yp,dX,dY)
+function [da_SRP] =ERP_effect(r,v,Sun,JD,Nring,C_rA_m,ttt,jdut1,lod,xp,yp,dX,dY)
 % Earth radiation pressure contribution to satellite accelration
 global R_E c
 
@@ -7,7 +7,7 @@ r_sun=norm(Sun);
 R=r/r_norm;
 N=cross(R,v./norm(v))./norm(cross(R,v./norm(v)));       % cross-track direction
 T=cross(N,R);                                           % along-track direction
-A_m=A_m/1E6;            % A/m ration in Km^2/kg
+C_rA_m=C_rA_m/1E6;            % A/m ration in Km^2/kg
 
 % Total number of ring elements............................................
 
@@ -37,6 +37,7 @@ MBc=pSR/4;                          % W/kgm2-->[1/s3]
 limit_cs=asind((R_E/1E3)/r_norm);
 beta_M=90-limit_cs;
 beta(Nring+1)=beta_M;
+
 % Limits of central cap....................................................
 
 csi(1)=acosd((Ntot-1+cosd(limit_cs))/Ntot);     %[deg]
@@ -69,8 +70,12 @@ tau=shadow_func(Sun,r);
 r_ecef=gcrs2itrs(r,zeros(3,1),zeros(3,1),ttt,jdut1,lod,xp,yp,dX,dY); 
 lat_elem=asind(r_ecef(3)./norm(r_ecef));        %[deg]
 [al,em]=EarthAlbedo_Emissivity(lat_elem,JD);
-FluxOP=A_*abs(C_r)*A_m*pSR;          % Optical flux    Km2/s3
-FluxIR=A_*abs(C_r)*A_m*MBc;          % IR flux         Km2/s3   
+
+C_rA_m=min(C_rA_m,1);
+C_rA_m=max(C_rA_m,1E-4);
+
+FluxOP=A_*abs(C_rA_m)*pSR;          % Optical flux    Km2/s3
+FluxIR=A_*abs(C_rA_m)*MBc;          % IR flux         Km2/s3   
 
 da_cap=(tau*al*FluxOP*CTheta_sun+em*FluxIR)*r/r_norm;
 

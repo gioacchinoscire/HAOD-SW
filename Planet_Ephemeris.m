@@ -20,7 +20,7 @@ timezone=0;
 %..........................................................................
 [year,mon,day,hr,min,sec] = invjday (JD);
 [~, ~, ~, ~, ~, ~, ~, ~, ~, ttdb]=convtime(year,mon,day,hr,min,sec,timezone,dut1,dat);
-[state, ~] = cspice_spkezr(PLANET,ttdb*36525*86400, 'J2000','LT+S',REF);
+[state, ~] = cspice_spkezr(PLANET,ttdb*36525*86400, 'J2000','NONE',REF);
 state=state';
 
 end

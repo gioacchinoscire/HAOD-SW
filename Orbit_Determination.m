@@ -1,4 +1,4 @@
-function [Solution]=Orbit_Determination(Measures,Obs_data)
+function [Solution]=Orbit_Determination(Measures,Obs_data,TLE_file)
 %----------------------------Orbit_Determination---------------------------%
 % This function Perform the Orbit Determination
 %   INPUT:
@@ -14,7 +14,7 @@ global R_E f_E e_E w_E GM G c g_eq
 format long
 addpath('c:\mice\src\mice\');       
 addpath('c:\mice\lib\');
-cspice_furnsh('de432s.bsp')
+cspice_furnsh('de425.bsp')
 order=input('Choose the Model degree (until 100): ');
 
 % Measure Import...........................................................
@@ -24,7 +24,6 @@ Meas_data=importdata(Measures,' ');
 Meas=Meas_data.data;        % Optical measure matrix [RA (deg), DEC(deg)]
 
 N=length(Meas);             % Measure Number
-
 Time_str=Meas_data.textdata;% Measure Time vector YYYY/MM/DD h:m:s
 
 Time_UTC=zeros(N,6);        % Measure Times UTC
@@ -43,12 +42,12 @@ for i=1:N
     Time_UTC(i,6)=str2double(day_str(7:end));        % seconds
        
     Time_JD(i)=jday(Time_UTC(i,1),Time_UTC(i,2),Time_UTC(i,3),...
-        Time_UTC(i,4),Time_UTC(i,5),Time_UTC(i,6))+3/86400;  % JD calculation   
+        Time_UTC(i,4),Time_UTC(i,5),Time_UTC(i,6));  % JD calculation   
 end
 
 % WGS84 Parameters.........................................................
 
-R_E=6378136.6;                          % Mean Equator radius       [m]
+R_E=6378136.3;                          % Mean Equator radius       [m]
 GM=398600.4415*1E9;                     % Earth gravity constant    [m3/s2]
 G=6.67428*10^-11;                       % Constant of Gravitation   [m3/(kg*s2)]
 f_E=1/298.25642;                        % Flattering
@@ -79,18 +78,15 @@ fprintf('Stop time:  %i/%i/%i %i:%i:%5.3f\n',Time_UTC(end,1),Time_UTC(end,2),...
 lat=Obs_data(1);                                   % Latitude        [deg]
 long=Obs_data(2);                                  % Longitude       [deg]
 alt=Obs_data(3);                                   % Height from MSL [m]
-c_lat=cosd(lat);
-s_lat=sind(lat);
-r_d=(R_E*sqrt(1-e_E^2)/(sqrt(1-e_E^2*c_lat^2)))*c_lat;
-r_k=(R_E*sqrt(1-e_E^2)/(sqrt(1-e_E^2*c_lat^2)))*s_lat;
-r=sqrt(r_d^2+r_k^2);                               % Ellipsoid radius [m]
 
 % Observer position over time..............................................
 
 obs_pos=zeros(N,3);
-recef=(r+alt)*1E-3.*[cosd(lat)*cosd(long);cosd(lat)*sind(long);sind(lat)];
 timezone=0;
-
+[x,y,z]=lla2ecef_deg(lat,long,alt);
+recef=[x;y;z]./1E3;
+dut1_vec=zeros(1,length(Time_JD));
+dat_vec=zeros(1,length(Time_JD));
 for i=1:length(Time_JD)
     [year,mon,day,hr,min,sec] = invjday (Time_JD(i));
     EOP_vector=find_EOP(Time_JD(i),EOP,DAT);
@@ -101,25 +97,40 @@ for i=1:length(Time_JD)
     dX=EOP_vector(5);
     dY=EOP_vector(6);
     dat=EOP_vector(7);
+    dut1_vec(i)=dut1;
+    dat_vec(i)=dat;
     [~, ~, jdut1, ~, ~, ~, ttt]= convtime (year,mon,day,hr,min,sec,timezone,dut1,dat);
     pos=itrs2gcrs(recef,zeros(3,1),zeros(3,1),ttt,jdut1,lod,xp,yp,dX,dY); 
     obs_pos(i,:)=pos';
-    [dRA_arcsec,dDEC_arcsec]=Aberration_Astrometry(Meas(i,1),Meas(i,2)',lat,long,alt,Time_JD(i),EOP,DAT);
-    Meas(i,1)=Meas(i,1)+dRA_arcsec'/3600;
-    Meas(i,2)=Meas(i,2)+dDEC_arcsec'/3600;
 end
+
 
 % Aberration Correction....................................................
 
-clear i
+[dRA,dDEC]=Aberration_Astrometry(Time_JD,Meas(:,1),Meas(:,2),dut1_vec,dat_vec);
+Meas(:,1)=Meas(:,1)+dRA;
+Meas(:,2)=Meas(:,2)+dDEC;
 
 % Initial Guess (SGP4).....................................................
 
-TLE=importdata('TLE_EGEOS.txt',';');
+TLE=importdata(TLE_file,';');
 lg1=(TLE{1,1}); % riga 1
 lg2=(TLE{2,1}); % riga 2
-Guess=(SGP4_propagator(lg1,lg2,Time_JD(1)))';
+if(lg1(1)=='0')
+   fprintf(['Analysed Satellite: ',lg1(3:end),'\n']);
+   lg1=(TLE{2,1}); % riga 1 del TLE
+   lg2=(TLE{3,1}); % riga 2 del TLE
+end
 
+Guess=(SGP4_propagator(lg1,lg2,Time_JD(1)))';
+% Guess=[-2.317480743780427;0.609504309326609;3.467521119298082;-0.000080095558859;-0.000296940861935;-0.000002644449134]*1E4;
+% Guess =[  -2.317480744698640
+%    0.609504306183742
+%    3.467521119057461
+%   -0.000080174276187
+%   -0.000296918530766
+%   -0.000002526030400]*1E4;
+ Initial_State=[13067.442508 -7400.917691 21781.508972 2.137193 3.243762 -0.184891]';
 disp('Initial Guess:');
 
 fprintf('\nX: %d Km\nY: %d Km\nZ: %d Km\nVx: %d Km/s\nVy: %d Km/s\nVz: %d Km/s\n',...
@@ -128,8 +139,8 @@ disp('----------------------------------------------------------------------');
 
 % Orbit Determination (Powell's dogleg)....................................
 
-kmax=70;                                           % Max Iteration Number
-A_m=0.0;
+kmax=150;                                           % Max Iteration Number
+A_m=0.001;
 Sol_struct=LSQ_PW_Optimization(Guess,kmax,obs_pos,Meas,Time_JD,order,EGM,EOP,DAT,A_m);
 
 disp('----------------------------Iteration stop----------------------------');

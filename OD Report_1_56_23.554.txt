@@ -1,0 +1,2 @@
+Iteration	fx (deg^2)			X[km]			Y[Km]			Z[km]		Vx[km]		Vy[Km]		Vz[km]
+

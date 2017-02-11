@@ -29,7 +29,13 @@ Diff_vec=Meas-Cel_Coord_model; % (Nobs,2)
 
 Diff_vec=rad2deg(atan2(sind(Diff_vec),cosd(Diff_vec)));
 
-Res_vec=sqrt(Diff_vec(:,1).^2+Diff_vec(:,2).^2);
+vers_meas=[cosd(Meas(:,2)).*cosd(Meas(:,1)),cosd(Meas(:,2)).*sind(Meas(:,1)),sind(Meas(:,2))];
+vers_calc=[cosd(Cel_Coord_model(:,2)).*cosd(Cel_Coord_model(:,1)),cosd(Cel_Coord_model(:,2)).*sind(Cel_Coord_model(:,1)),sind(Cel_Coord_model(:,2))];
+
+Res_vec=acosd(dot(vers_meas',vers_calc')');
+Res_vec(Res_vec<0)=Res_vec(Res_vec<0)+360;
+
+% Res_vec=sqrt(Diff_vec(:,1).^2+Diff_vec(:,2).^2);
 
 end
 

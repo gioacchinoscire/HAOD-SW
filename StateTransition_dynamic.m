@@ -1,38 +1,46 @@
-function [dxdt]=StateTransition_dynamic(time,phi,order,Coeff,prop_time,Initial_State)
-% global R_E GM
-% 
-% adim=[(R_E/1E3).*ones(3,1);sqrt((GM/1E9)/(R_E/1E3))*ones(3,1)];
-adim=ones(6,1);
-options=odeset('AbsTol',1E-3,'RelTol',1E-3);
-Initial_State=Initial_State';
+function [phi_dot]=StateTransition_dynamic(time,phi,order,EGM,EOP,DAT,A_m,JD0,state_interp)
+% time=vettore dei tempi
+% JD0
 
-if(time~=prop_time(1)*86400)
-    [~,Stato_sat]=ode113(@(t,x)Earth_dynamic(t,x,prop_time(1)/86400,order,Coeff),[prop_time(1),time/86400],Initial_State',options);
-else
-    Stato_sat=Initial_State;
+% Target dynamics..........................................................
+
+curr_state=zeros(6,1);
+
+[row_time,~]=find((state_interp(:,1)-time)>=-210 & (state_interp(:,1)-time)<=210);
+delta=60;
+while(isempty(row_time)==1)
+    [row_time,~]=find((state_interp(:,1)-time)>=-(210+delta) & (state_interp(:,1)-time)<=(210+delta));
+end
+row_low=row_time-5;
+row_high=row_time+5;
+
+row_low=row_low(end);
+row_high=row_high(end);
+
+row_low=max(row_low,1);
+row_high=max(min(row_high,length(state_interp(:,1))),11);
+
+
+for i=2:7  
+    curr_state(i-1)=lagrange_interpolation(state_interp(row_low:row_high,1)/86400,state_interp(row_low:row_high,i),time/86400);
 end
 
 A=zeros(6);
-v=zeros(size(adim));
-epsA=1E-6;
-g=Earth_dynamic(time,Stato_sat(end,:)',prop_time(1),order,Coeff);
+A(1:3,4:6)=eye(3);
+v=zeros(6,1);
+epsA=1E-5;
+
 for i=1:6
     v(i)=epsA;
-    gh_p=Earth_dynamic(time,Stato_sat(end,:)'+v,prop_time(1),order,Coeff);
-%     gh_m=Earth_dynamic(time,Stato_sat(end,:)'-v,prop_time(1),order,Coeff);
-%     gh_2p=Earth_dynamic(time,Stato_sat(end,:)'+2*v,prop_time(1),order,Coeff);
-%     gh_2m=Earth_dynamic(time,Stato_sat(end,:)'-2*v,prop_time(1),order,Coeff);
-%     A(:,i)=((gh_2m-8*gh_m+8*gh_p-gh_2p)/(12*epsA));
-     A(:,i)=(gh_p-g)/(epsA);
+    gh_p=Earth_dynamic(time,curr_state+v,JD0,order,EGM,EOP,DAT,A_m);
+    gh_m=Earth_dynamic(time,curr_state-v,JD0,order,EGM,EOP,DAT,A_m);
+    A(4:6,i)=(gh_p(4:6)-gh_m(4:6))/(2*epsA);
     v(i)=0;
 end
 
-phi_mat=vec2mat(phi,6)';
+phi_mat=reshape(phi,[6,6]);
 phi_dot=A*phi_mat;
+phi_dot=reshape(phi_dot,[36,1]);
 
-dxdt=phi_dot(:,1);
-for i=2:6
-    dxdt=[dxdt;phi_dot(:,i)];
-end
 
 end

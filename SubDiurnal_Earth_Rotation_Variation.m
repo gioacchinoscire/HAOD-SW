@@ -143,8 +143,8 @@ coeff_utlod=[1 -1 0 -2 -2 -2 117.655 1.2113611 0.40 -0.08 -0.4 -2.1
     2 1 0 0 0 0 285.455 0.4897717 -0.15 0.04 0.5 1.9
     2 1 0 0 0 -1 285.465 0.4897365 -0.06 0.02 0.2 0.8
     2 0 0 2 0 2 295.555 0.4810750 -0.05 0.02 0.2 0.6];
-coeff_xy=deg2rad(coeff_xy/1E6/3600);
-coeff_utlod=deg2rad(coeff_utlod/1E6/3600);
+coeff_xy(:,7:end)=deg2rad(coeff_xy(:,7:end)/1E6/3600);
+coeff_utlod(:,7:end)=coeff_utlod(:,7:end)/1E6;
 F_v=Delaunay_variables(ttt);
 [GMST]=Greenswich_MST(ttt,jdut1);
 Del_mul_xy=coeff_xy(:,2:6);
@@ -154,16 +154,18 @@ S_x=coeff_xy(:,9);
 C_x=coeff_xy(:,10);
 S_y=coeff_xy(:,11);
 C_y=coeff_xy(:,12);
+
 Del_mul_utlod=coeff_utlod(:,2:6);
 n_utlod=coeff_utlod(:,1);
 phi_utlod=Del_mul_utlod*F_v'-n_utlod*(GMST+pi);
-S_ut1=coeff_xy(:,9);
-C_ut1=coeff_xy(:,10);
-S_lod=coeff_xy(:,11);
-C_lod=coeff_xy(:,12);
+S_ut1=coeff_utlod(:,9);
+C_ut1=coeff_utlod(:,10);
+S_lod=coeff_utlod(:,11);
+C_lod=coeff_utlod(:,12);
 
 Deltaxp=sum(C_x.*cos(phi_xy)+S_x.*sin(phi_xy));
 Deltayp=sum(C_y.*cos(phi_xy)+S_y.*sin(phi_xy));
+
 DeltaUT1=sum(C_ut1.*cos(phi_utlod)+S_ut1.*sin(phi_utlod));
 DeltaLOD=sum(C_lod.*cos(phi_utlod)+S_lod.*sin(phi_utlod));
 

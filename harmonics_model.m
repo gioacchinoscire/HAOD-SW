@@ -25,7 +25,7 @@ long_moon=atan2(Moon(2),Moon(1));   % Moon longitude [rad]
 %% Fundamental values......................................................
 
 n=EGM(:,1);
-[row,col]=find(n==order);
+[row,~]=find(n==order);
 row=row(end);
 n=n(1:row);
 m=EGM(1:row,2);
@@ -56,29 +56,31 @@ Cnm(8)=0.5399659*10^-6+4.7*10^-12*ttt*100;
 Cnm(2)=sqrt(3)*xp_t*Cnm(1)-xp_t*Cnm(3)+yp_t*Snm(3);
 Snm(2)=-sqrt(3)*yp_t*Cnm(1)-yp_t*Cnm(3)-xp_t*Snm(3);
 
-low=1;
+
 Leg=zeros(row,1);
 Leg_plus1=zeros(row,1);
-for i=2:order
-    up=low+i;
-    leg_fun=legendre(i,sin(lat));
-    Leg(low:up)=leg_fun;
-    Leg_plus1(low:up)=[leg_fun(2:end);0];
-    low=up+1;
-end
-
 k=2*ones(size(n));
 k(m==0)=1;
-
 prod_nm=sqrt((factorial(n-m).*(2*n+1).*k)./factorial(n+m));
+P=Associate_Legendre(order,sin(lat));
 
-Leg=(-1).^(m).*Leg.*prod_nm;
-n_mplus1=n-(m+1);
-[row_min,col_min]=find(n_mplus1<0);
-n_mplus1(row_min)=0;
-prod_nm_plus1=sqrt((factorial(n_mplus1).*(2*n+1)*2)./factorial(n+m+1));
-prod_nm_plus1(row_min)=0;
-Leg_plus1=(-1).^(m+1).*Leg_plus1.*prod_nm_plus1;
+low=1;
+for i=2:order
+    up=low+i;
+    Leg(low:up)=P(i+1,1:i+1);
+    low=up+1;
+end
+Leg=Leg.*prod_nm;
+
+scale_fact= sqrt((n+m+1).*(n-m));
+scale_fact(m==0)= sqrt( (n(m==0)+1).*(n(m==0))/2);
+scale_fact(n-m<=0)=0;
+
+for i=1:length(Leg)
+    if(m(i)~=n(i))
+        Leg_plus1(i)= Leg(i+1);
+    end
+end
 
 %% Solid Earth Tides.......................................................
 % Permanent Tide...........................................................
@@ -89,7 +91,7 @@ knm=Nominal_Love_numbers(n_perm,m_perm);
 Leg_sun=[legendre(2,sin(lat_sun));legendre(3,sin(lat_sun))];
 Leg_moon=[legendre(2,sin(lat_moon));legendre(3,sin(lat_moon))];
 
-Delta_CS=2*knm./(2.*n_perm+1).*((GM_sun/GM)*(R_E/r_sun).^(n_perm+1).*Leg_sun.*exp(-1j*long_sun)+(GM_moon/GM)*(R_E/r_moon).^(n_perm+1).*Leg_moon.*exp(-1j*long_moon));
+Delta_CS=2*knm./(2.*n_perm+1).*((GM_sun/GM).*(R_E/r_sun).^(n_perm+1).*Leg_sun.*exp(-1j*long_sun)+(GM_moon/GM).*(R_E/r_moon).^(n_perm+1).*Leg_moon.*exp(-1j*long_moon));
 Delta_CS(1)=Delta_CS(1)-(4.4228*10^-8)*(-0.31460)*knm(1);
 Delta_Cnm_PST=real(Delta_CS);
 Delta_Snm_PST=imag(Delta_CS);
@@ -98,14 +100,14 @@ n_perm=n(1:3);
 m_perm=m(1:3);
 [~,knm_p]=Nominal_Love_numbers(n_perm,m_perm);
 
-Delta_CS=(knm_p./5).*((GM_sun/GM)*(R_E/r_sun).^3.*Leg_sun(1:3).*exp(-1j*long_sun)+(GM_moon/GM)*(R_E/r_moon).^3.*Leg_moon(1:3).*exp(-1j*long_moon));
+Delta_CS=(knm_p./5).*((GM_sun/GM)*(R_E/r_sun).^3.*Leg_sun(1:3).*exp(-1j*long_sun)+(GM_moon/GM).*(R_E/r_moon).^3.*Leg_moon(1:3).*exp(-1j*long_moon));
 Delta_Cnm_PST=[Delta_Cnm_PST;real(Delta_CS)];
 Delta_Snm_PST=[Delta_Snm_PST;imag(Delta_CS)];
 
 Cnm(1:10)=Cnm(1:10)+Delta_Cnm_PST;
 Snm(1:10)=Snm(1:10)+Delta_Snm_PST;
 
-% Frequency correction.....................................................
+% % Frequency correction.....................................................
 
 [GMST]=Greenswich_MST(ttt,jdut1);
 
@@ -139,8 +141,8 @@ Snm=Snm+Delta_Snm_OPT;
 
 dU_dr=-(GM/r_m^2)*(sum(((R_E/r_m).^n).*(n+1).*Leg.*(Cnm.*cos(m.*long)+Snm.*sin(m.*long)))+1);
 dU_dlong=(GM/r_m)*sum((R_E/r_m).^n.*Leg.*m.*(Snm.*cos(m.*long)-Cnm.*sin(m.*long)));
-dU_dlat=(GM/r_m)*sum((R_E/r_m).^n.*((Cnm.*cos(m.*long)+Snm.*sin(m.*long))).*(Leg_plus1-m.*tan(lat).*Leg));
-            
+dU_dlat=(GM/r_m)*sum((R_E/r_m).^n.*((Cnm.*cos(m.*long)+Snm.*sin(m.*long))).*(scale_fact.*Leg_plus1-m.*tan(lat).*Leg));
+
 g=zeros(3,1);
 
 g(1)=((1/r_m)*dU_dr-(r_K/(r_m^2*sqrt(r_I^2+r_J^2)))*dU_dlat)*r_I-(1/(r_I^2+r_J^2)*dU_dlong)*r_J;
